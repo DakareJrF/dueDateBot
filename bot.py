@@ -7,8 +7,10 @@ from aiogram.types import Message
 from aiogram import BaseMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+import scraper
+
 logging.basicConfig(level=logging.INFO)
-TOKEN = ''
+TOKEN = '8044322179:AAENnwqp3f8y2xkto-Vrd8W4AA0Rehf08AA'
 bot=Bot(token=TOKEN)
 dp=Dispatcher()
 
@@ -27,11 +29,12 @@ class SchedulerMiddleware(BaseMiddleware):
 
 @hello_router.message(Command(commands=["dueToday"]))
 async def hello(message: Message, bot: Bot, scheduler: AsyncIOScheduler):
-    id =
+    id = -1002312275639
     await message.answer(
-        text="Тест 1"
+        text="Отправка напоминаний о дедлайнах включена!"
     )
-    scheduler.add_job(bot.send_message, 'cron',day_of_week='mon-fri', hour=7, minute=30, args=(id, "Тест 2"))
+    scheduler.add_job(bot.send_message, 'cron',day_of_week='mon-fri', hour=22, minute=20, args=(id, f"Сегодня истекают следующие домашние задания: \n"
+                                                                                                   f"{scraper.process_response(scraper.response1)}"))
 
 
 async def main():

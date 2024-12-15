@@ -1,34 +1,56 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-import pandas as pd
-import time
-from bs4 import BeautifulSoup
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import requests
+from datetime import datetime
+import json
 
-browser = webdriver.Chrome()
+url = "https://msapi.top-academy.ru/api/v2/homework/operations/list?page=1&status=1&type=0&group_id=12"
 
-browser.get('')
+payload = {}
+headers = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'ru_RU, ru',
+  'Accept-Encoding': 'gzip, deflate, br, zstd',
+  'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvbXNhcGkuaXRzdGVwLm9yZyIsImlhdCI6MTczNDAxNTg3MywiYXVkIjoxLCJleHAiOjE3MzQwMzc0NzMsImFwaUFwcGxpY2F0aW9uSWQiOjEsImFwaVVzZXJUeXBlSWQiOjEsInVzZXJJZCI6NjMsImlkQ2l0eSI6NDkwfQ.IqUp0hA2LEVeKb5FHrJZAsfVmydtCO2YxBHS6Gm9UIQ',
+  'Origin': 'https://journal.top-academy.ru',
+  'Connection': 'keep-alive',
+  'Referer': 'https://journal.top-academy.ru/',
+  'Sec-Fetch-Dest': 'empty',
+  'Sec-Fetch-Mode': 'cors',
+  'Sec-Fetch-Site': 'same-site',
+  'TE': 'trailers',
+  'Cookie': '_csrf=ok3GAkQW1zvn1wOgYC3FkuDTJink_k2R'
+}
 
-time.sleep(5)
+response1 = requests.request("GET", url, headers=headers, data=payload)
 
-username = browser.find_element("id","username")
-username.send_keys("")
-password = browser.find_element("id","password")
-password.send_keys("")
-time.sleep(5)
-browser.find_element("xpath","//button[contains(., 'Вход')]").click()
-time.sleep(5)
+def process_response(response):
+  s = []
+  data = json.loads(response.text)
 
-html = browser.page_source
-browser.quit()
+  for i in data:
+    s.append(i['name_spec'])
+    s.append(i['completion_time'])
+    s.append(i['theme'])
 
-soup = BeautifulSoup(html, 'html.parser')
-homeworks = soup.find_all('div', class_='homework-item')
-text='Срок'
+  todays = datetime.today().strftime('%Y-%m-%d')
 
-for i in homeworks:
-    hw = homeworks.find('td', class_='title').find('span', class_='titleline').find('a')
+  indices = [index for index, element in enumerate(s) if todays in element]
 
+  result = []
+  for index in indices:
+    if index > 0:
+      result.append(s[index - 1])
+    if index < len(s) - 1:
+      result.append(s[index + 1])
+
+  combined_strings = []
+  for i in range(0, len(result), 2):
+    if i + 1 < len(result):
+      combined_strings.append(result[i] + " - " + result[i + 1])
+    else:
+      combined_strings.append(result[i])
+
+  final_output = '\n'.join(combined_strings)
+  return final_output
+
+print(process_response(response1))
